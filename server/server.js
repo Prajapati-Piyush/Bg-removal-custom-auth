@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import connectDB from './configs/db.js';
+import userRouter from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -10,17 +11,19 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors()); // ✅ fix here
+app.use(cors());
 
 // Database connection
-connectDB(); // ✅ removed await
+connectDB();
 
 // Routes
 app.get('/', (req, res) => {
-  res.send('API working');
+    res.send('API working');
 });
+
+app.use('/api/user', userRouter);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`✅ Server running on http://localhost:${PORT}`);
 });
