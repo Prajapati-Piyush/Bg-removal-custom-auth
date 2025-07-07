@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './configs/db.js';
 import userRouter from './routes/userRoutes.js';
+import imageRouter from './routes/ImageRoutes.js';
 
 dotenv.config();
 
@@ -20,8 +21,9 @@ connectDB();
 app.get('/', (req, res) => {
     res.send('API working');
 });
-
 app.use('/api/user', userRouter);
+app.use('/api/image',imageRouter);
+
 
 // Start server
 app.listen(PORT, () => {
