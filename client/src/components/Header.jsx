@@ -13,7 +13,11 @@ const Header = () => {
                 <h1 className='text-4xl xl:text-5xl 2xl:text-6xl font-bold text-neutral-700 leading-tight tra'>
                     Remove the <br className='max-md:hidden' /> <span className='bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent' >backfround </span> from <br className='max-md:hidden' />images for free
                 </h1>
-                <p className='my-6 text-[15px] text-gray-500'>Lorem ipsum  consectetur adipisicing elit. Odit facilis sapiente minima. <br className='max-sm:hidden' /> Saepe explicabo quo mollitia commodi soluta possimus </p>
+                <p className='my-6 text-[15px] text-gray-500'>
+Remove image backgrounds instantly with AI-powered precision. <br className='max-sm:hidden' />
+Perfect for e-commerce, design, and marketing—no editing skills needed.
+</p>
+
                 <div>
                     <input onChange={(e) => removeBg(e.target.files[0])} type="file" accept='image/*' id="upload1" hidden />
 

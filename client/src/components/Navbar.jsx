@@ -20,9 +20,12 @@ const Navbar = () => {
 
     return (
         <div className='flex items-center justify-between mx-4 py-3  lg:mx-44'>
-            <Link to={'/'}>
-                <img className='w-32 sm:w-44' src={assets.logo} alt="logo" />
-            </Link>
+            <div className='flex items-center'>
+                <Link to={'/'}>
+                    <img  className='w-32 sm:w-44' src={assets.Erazor} alt="logo" />
+                </Link>
+            </div>
+
             {
                 isSignedIn ?
                     <div className='flex items-center gap-2 sm:gap-3'>
