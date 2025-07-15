@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignUpPage';
 
+
 function App() {
   return (
     <div className='min-h-screen bg-slate-50'>
