@@ -41,8 +41,6 @@ const AppContextProvider = (props) => {
     fetchUser();
   }, []);
 
-  
-
   const loadCreditsData = async () => {
     try {
       const { data } = await axios.get(backendUrl + '/api/user/credits', {

@@ -43,6 +43,6 @@ app.use('/api/user', userRouter);
 app.use('/api/image', imageRouter);
 
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`✅ Server running on http://localhost:${PORT}`);
+// });

@@ -31,7 +31,7 @@ const LoginPage = () => {
 
         try {
             setLoading(true);
-            const res = await axios.post(backendUrl + '/user/login', {
+            const res = await axios.post(backendUrl + '/api/user/login', {
                 email,
                 password,
             }, { withCredentials: true });

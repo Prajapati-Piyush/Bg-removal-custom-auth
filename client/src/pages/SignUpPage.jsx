@@ -32,7 +32,7 @@ const SignupPage = () => {
 
         try {
             setLoading(true);
-            const res = await axios.post(backendUrl + '/user/signup', {
+            const res = await axios.post(backendUrl + '/api/user/signup', {
                 firstName,
                 lastName,
                 email,

@@ -64,7 +64,7 @@ const BuyCredit = () => {
       handler: async (response) => {
         try {
           const { data } = await axios.post(
-            backendUrl + '/user/verify-razor',
+            backendUrl + '/api/user/verify-razor',
             response,
             { withCredentials: true }
           );
@@ -89,7 +89,7 @@ const BuyCredit = () => {
   const paymentRazorpay = async (planId) => {
     try {
       const { data } = await axios.post(
-        backendUrl + '/user/pay-razor',
+        backendUrl + '/api/user/pay-razor',
         { planId },
         { withCredentials: true }
       );
