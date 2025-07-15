@@ -13,13 +13,13 @@ const AppContextProvider = (props) => {
   const [user, setUser] = useState(null);
   const [isLoggedin, setIsLoggedin] = useState(false);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://bg-removal-backend-beta.vercel.app";
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await axios.get(backendUrl + '/user/me', {
+        const { data } = await axios.get(backendUrl + '/api/user/me', {
           withCredentials: true,
         });
 
@@ -41,18 +41,11 @@ const AppContextProvider = (props) => {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    axios.get(backendUrl + '/test-cookie', { withCredentials: true })
-      .then((response) => {
-        console.log(response)
-      });
-
-  })
-
+  
 
   const loadCreditsData = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/user/credits', {
+      const { data } = await axios.get(backendUrl + '/api/user/credits', {
         withCredentials: true,
       });
 
@@ -76,7 +69,7 @@ const AppContextProvider = (props) => {
       image && formData.append('image', image);
 
       const { data } = await axios.post(
-        backendUrl + '/image/remove-bg',
+        backendUrl + '/api/image/remove-bg',
         formData,
         {
           withCredentials: true,
