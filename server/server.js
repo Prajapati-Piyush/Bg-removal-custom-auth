@@ -23,6 +23,12 @@ app.use(cors({
   credentials: true, // ✅ send & receive cookies
 }));
 
+app.get('/test-cookie', (req, res) => {
+  console.log('Cookies:', req.cookies);
+  res.json({ cookies: req.cookies });
+});
+
+
 
 
 

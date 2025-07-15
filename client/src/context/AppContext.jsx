@@ -41,6 +41,15 @@ const AppContextProvider = (props) => {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    axios.get(backendUrl + '/test-cookie', { withCredentials: true })
+      .then((response) => {
+        console.log(response)
+      });
+
+  })
+
+
   const loadCreditsData = async () => {
     try {
       const { data } = await axios.get(backendUrl + '/api/user/credits', {
