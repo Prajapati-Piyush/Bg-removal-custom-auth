@@ -37,7 +37,7 @@ const SignupPage = () => {
                 lastName,
                 email,
                 password,
-            });
+            },{withCredentials:true});
 
             if (res.data.success) {
                 localStorage.setItem('token', res.data.token); 
