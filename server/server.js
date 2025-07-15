@@ -14,14 +14,20 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+// app.use(cors({
+//   origin: [
+//     "https://free-bg-removal.vercel.app",
+//     "http://localhost:5173",
+//     "https://bg-removal-frontend-beta.vercel.app"
+//   ],
+//   credentials: true, // ✅ send & receive cookies
+// }));
+
 app.use(cors({
-  origin: [
-    "https://free-bg-removal.vercel.app",
-    "http://localhost:5173",
-    "https://bg-removal-frontend-beta.vercel.app"
-  ],
-  credentials: true, // ✅ send & receive cookies
+  origin: true, // ✅ accept any origin since it's same domain
+  credentials: true
 }));
+
 
 app.get('/test-cookie', (req, res) => {
   console.log('Cookies:', req.cookies);
