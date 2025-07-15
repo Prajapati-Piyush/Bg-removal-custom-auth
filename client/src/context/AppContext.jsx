@@ -13,7 +13,7 @@ const AppContextProvider = (props) => {
   const [user, setUser] = useState(null);
   const [isLoggedin, setIsLoggedin] = useState(false);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://bg-removal-backend-beta.vercel.app";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
 
   useEffect(() => {
