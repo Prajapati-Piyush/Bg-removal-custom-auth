@@ -141,13 +141,13 @@ const login = async (req, res) => {
         if (!isValidPassword) {
             return res.json({ success: false, message: "Invalid credentials" });
         }
-
         const token = generateToken(user);
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None',
+            secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
         });
+
 
         return res.json({
             success: true,
@@ -194,9 +194,10 @@ const signup = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None',
+            secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
         });
+
 
         res.json({
             success: true,
@@ -211,30 +212,30 @@ const signup = async (req, res) => {
 };
 
 const getLoggedInUser = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: "Not authenticated" });
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const user = await userModel.findOne({ clerkId: req.user.clerkId });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                firstName: user.firstName,
+                email: user.email,
+                photo: user.photo || null,
+                clerkId: user.clerkId,
+            },
+        });
+    } catch (error) {
+        console.error("Error in /me:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
     }
-
-    const user = await userModel.findOne({ clerkId: req.user.clerkId });
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    res.json({
-      success: true,
-      user: {
-        firstName: user.firstName,
-        email: user.email,
-        photo: user.photo || null,
-        clerkId: user.clerkId,
-      },
-    });
-  } catch (error) {
-    console.error("Error in /me:", error.message);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
 };
 
-export { userCredits, paymentRazorpay, verifyRazorpay, signup, login , getLoggedInUser };
+export { userCredits, paymentRazorpay, verifyRazorpay, signup, login, getLoggedInUser };
