@@ -23,6 +23,7 @@ const AppContextProvider = (props) => {
           withCredentials: true,
         });
 
+        console.log(data)
         if (data.success) {
           setUser(data.user);
           setIsLoggedin(true);
