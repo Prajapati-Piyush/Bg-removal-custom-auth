@@ -15,7 +15,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || "https://free-bg-removal.vercel.app", "http://localhost:5173"], // ✅ allowed domains
+  origin: [process.env.FRONTEND_URL || "https://free-bg-removal.vercel.app", "http://localhost:5173", "https://bg-removal-frontend-beta.vercel.app/"], // ✅ allowed domains
   credentials: true, // ✅ send & receive cookies
 }));
 
