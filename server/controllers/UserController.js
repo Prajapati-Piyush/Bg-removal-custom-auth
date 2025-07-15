@@ -146,7 +146,6 @@ const login = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
             sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
-            domain: process.env.COOKIE_DOMAIN || undefined,
             path: '/',
         });
 
@@ -198,7 +197,6 @@ const signup = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
             sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
-            domain: process.env.COOKIE_DOMAIN || undefined,
             path: '/',
         });
 
@@ -207,7 +205,14 @@ const signup = async (req, res) => {
             success: true,
             message: 'Signup successful',
             token,
+            user: {
+                clerkId: user.clerkId,
+                firstName: user.firstName,
+                photo: user.photo,
+                email: user.email,
+            },
         });
+
 
     } catch (error) {
         console.log(error.message);

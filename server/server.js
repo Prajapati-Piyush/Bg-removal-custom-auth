@@ -15,7 +15,11 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || "https://free-bg-removal.vercel.app", "http://localhost:5173", "https://bg-removal-frontend-beta.vercel.app/"], // ✅ allowed domains
+  origin: [
+    "https://free-bg-removal.vercel.app",
+    "http://localhost:5173",
+    "https://bg-removal-frontend-beta.vercel.app"
+  ],
   credentials: true, // ✅ send & receive cookies
 }));
 
@@ -27,12 +31,12 @@ connectDB();
 
 
 app.get('/', (req, res) => {
-    res.send('API working');
+  res.send('API working');
 });
 app.use('/api/user', userRouter);
 app.use('/api/image', imageRouter);
 
 
 app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
