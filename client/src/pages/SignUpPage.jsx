@@ -14,7 +14,7 @@ const SignupPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { backendUrl, setUser, setIsLoggedin } = useContext(AppContext);
+    const { backendUrl, setUser, setToken, setIsLoggedin } = useContext(AppContext);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -42,6 +42,7 @@ const SignupPage = () => {
             if (res.data.success) {
          
                 setUser(res.data.user);
+                setToken(res.data.token);
                 setIsLoggedin(true)
                 alert('Signup successful!');
 

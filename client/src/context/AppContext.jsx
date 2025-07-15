@@ -11,6 +11,7 @@ const AppContextProvider = (props) => {
   const [image, setImage] = useState(false);
   const [resultImage, setResultImage] = useState(false);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoggedin, setIsLoggedin] = useState(false);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://bg-removal-backend-beta.vercel.app";
@@ -26,6 +27,7 @@ const AppContextProvider = (props) => {
         console.log(data)
         if (data.success) {
           setUser(data.user);
+          setToken(data.token)
           setIsLoggedin(true);
         } else {
           setUser(null);
@@ -39,7 +41,8 @@ const AppContextProvider = (props) => {
     };
 
     fetchUser();
-  }, []);
+  }, [backendUrl]);
+
 
   const loadCreditsData = async () => {
     try {
@@ -92,6 +95,7 @@ const AppContextProvider = (props) => {
 
   const value = {
     credits,
+    token,
     setCredits,
     loadCreditsData,
     backendUrl,
@@ -103,6 +107,7 @@ const AppContextProvider = (props) => {
     user,
     isLoggedin,
     setUser,
+    setToken,
     setIsLoggedin,
   };
 

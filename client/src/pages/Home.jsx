@@ -5,7 +5,9 @@ import BgSlider from '../components/BgSlider'
 import Testimonials from '../components/Testimonials'
 import Upload from '../components/Upload'
 
+
 const Home = () => {
+
   return (
     <div>
       <Header />
