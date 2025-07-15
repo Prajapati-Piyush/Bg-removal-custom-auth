@@ -1,87 +1,17 @@
-import { Webhook } from "svix"
 import userModel from "../models/userModel.js"
 import razorpay from 'razorpay'
 import transactionModel from "../models/transactionModel.js"
 import dotenv from 'dotenv'
+import bcrypt from 'bcrypt'
+import { v4 as uuidv4 } from 'uuid';
+import generateToken from '../configs/utils.js'
+
 dotenv.config()
 
-//  API Controller fn to manage clerk user with database
-// http://localhost:3000/api/user/webhooks
-
-const clerkWebhooks = async (req, res) => {
-    try {
-
-        // create a Svix instance with clerk webhook  secret
-        const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
-        await whook.verify(JSON.stringify(req.body), {
-            "svix-id": req.headers["svix-id"],
-            "svix-timestamp": req.headers["svix-timestamp"],
-            "svix-signature": req.headers["svix-signature"],
-        })
-
-        const { data, type } = req.body
-
-
-        console.log("Incoming Webhook Type:", type);
-        console.log("Incoming Webhook Data:", data);
-        console.log(data.id)
-        console.log("Full body:", JSON.stringify(req.body, null, 2));
-
-        switch (type) {
-            case "user.created": {
-                const userData = {
-                    clerkId: data.id,
-                    email: data.email_addresses[0].email_address,
-                    firstName: data.first_name,
-                    lastName: data.last_name,
-                    photo: data.image_url
-                }
-                await userModel.create(userData)
-                console.log("User creaded", userData)
-                res.json({})
-
-                break;
-            }
-            case "user.updated": {
-                const userData = {
-                    email: data.email_addresses[0].email_address,
-                    firstName: data.first_name,
-                    lastName: data.last_name,
-                    photo: data.image_url
-                }
-                await userModel.findOneAndUpdate({ clerkId: data.id }, userData);
-
-                res.json({})
-
-                break;
-            }
-            case "user.deleted": {
-                await userModel.findOneAndDelete({ clerkId: data.id })
-                res.json({})
-                break;
-            }
-
-            default:
-                break;
-        }
-
-    } catch (error) {
-        console.log(error.message)
-        res.json({ success: false, message: error.message })
-    }
-}
-
-
-
-
-
 // API controller function to get user available credits data 
-
 const userCredits = async (req, res) => {
     try {
-        const { clerkId } = req.body
-
-        const allUsers = await userModel.find();
+        const { clerkId } = req.user
 
         const userData = await userModel.findOne({ clerkId })
         res.json({ success: true, credits: userData.creditBalance });
@@ -92,20 +22,17 @@ const userCredits = async (req, res) => {
     }
 }
 
-
-//  Gateway initialize
-
+// Gateway initialize
 const razorpayInstance = new razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
-
 })
 
-//  APi to make payment to credits
+// API to make payment to credits
 const paymentRazorpay = async (req, res) => {
     try {
-
-        const { clerkId, planId } = req.body;
+        const { clerkId } = req.user;
+        const { planId } = req.body;
         const user = await userModel.findOne({ clerkId });
 
         if (!user || !planId) {
@@ -138,7 +65,6 @@ const paymentRazorpay = async (req, res) => {
 
         date = Date.now()
 
-        //  creating transaction 
         const transactionData = {
             clerkId,
             plan,
@@ -168,8 +94,7 @@ const paymentRazorpay = async (req, res) => {
     }
 }
 
-//  Api controller function to verify razorpay payment
-
+// API controller function to verify razorpay payment
 const verifyRazorpay = async (req, res) => {
     try {
         const { razorpay_order_id } = req.body;
@@ -188,8 +113,6 @@ const verifyRazorpay = async (req, res) => {
 
             await userModel.findByIdAndUpdate(userData._id, { creditBalance });
 
-            //  Making the payment true
-
             await transactionModel.findByIdAndUpdate(transactionData._id, { payment: true });
 
             res.json({ success: true, message: "Credits added" })
@@ -200,4 +123,118 @@ const verifyRazorpay = async (req, res) => {
     }
 }
 
-export { clerkWebhooks, userCredits, paymentRazorpay, verifyRazorpay }
+const login = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.json({ success: false, message: "Email and password are required" });
+    }
+
+    try {
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+
+        if (!isValidPassword) {
+            return res.json({ success: false, message: "Invalid credentials" });
+        }
+
+        const token = generateToken(user);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+        });
+
+        return res.json({
+            success: true,
+            message: "Logged in",
+            token,
+            user: {
+                clerkId: user.clerkId,
+                firstName: user.firstName,
+                photo: user.photo,
+            },
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const signup = async (req, res) => {
+    const { firstName, lastName, email, password } = req.body;
+
+    if (!firstName || !email || !password) {
+        return res.json({ success: false, message: "Please fill all required fields" });
+    }
+
+    try {
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.json({ success: false, message: "Email already exists" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await userModel.create({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            clerkId: uuidv4(),
+            photo: `https://ui-avatars.com/api/?name=${firstName}+${lastName}`,
+        });
+
+        const token = generateToken(user);
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+        });
+
+        res.json({
+            success: true,
+            message: 'Signup successful',
+            token,
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const getLoggedInUser = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+
+    const user = await userModel.findOne({ clerkId: req.user.clerkId });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        firstName: user.firstName,
+        email: user.email,
+        photo: user.photo || null,
+        clerkId: user.clerkId,
+      },
+    });
+  } catch (error) {
+    console.error("Error in /me:", error.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export { userCredits, paymentRazorpay, verifyRazorpay, signup, login , getLoggedInUser };

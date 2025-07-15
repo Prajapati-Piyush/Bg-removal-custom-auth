@@ -4,28 +4,29 @@ import cors from 'cors';
 import connectDB from './configs/db.js';
 import userRouter from './routes/userRoutes.js';
 import imageRouter from './routes/ImageRoutes.js';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
 
-// Database connection
+app.use(express.json());
+app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
+app.use(cookieParser());
+
+
 connectDB();
 
-// Routes
+
 app.get('/', (req, res) => {
     res.send('API working');
 });
 app.use('/api/user', userRouter);
-app.use('/api/image',imageRouter);
+app.use('/api/image', imageRouter);
 
 
-// Start server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
 });

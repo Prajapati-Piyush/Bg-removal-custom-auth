@@ -1,88 +1,115 @@
-import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import React from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-
-export const AppContext = createContext()
-
+export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
-    const [credits, setCredits] = useState(false);
-    const [image, setImage] = useState(false);
-    const [resultImage, setResultImage] = useState(false);
+  const [credits, setCredits] = useState(false);
+  const [image, setImage] = useState(false);
+  const [resultImage, setResultImage] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isLoggedin, setIsLoggedin] = useState(false);
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL
-    const navigate = useNavigate()
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
 
-    const { getToken } = useAuth();
-    const { isSignedIn } = useUser()
-    const { openSignIn } = useClerk()
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await axios.get(backendUrl + '/api/user/me', {
+          withCredentials: true,
+        });
 
-    const loadCreditsData = async () => {
-        try {
-            const token = await getToken();
-            const { data } = await axios.get(backendUrl + '/api/user/credits', { headers: { token } })
-            if (data.success) {
-                setCredits(data.credits)
-                console.log(data.credits)
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error(error.message);
+        if (data.success) {
+          setUser(data.user);
+          setIsLoggedin(true);
+        } else {
+          setUser(null);
+          setIsLoggedin(false);
         }
+      } catch (error) {
+        console.log("Fetch user failed:", error.message);
+        setUser(null);
+        setIsLoggedin(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const loadCreditsData = async () => {
+    try {
+      const { data } = await axios.get(backendUrl + '/api/user/credits', {
+        withCredentials: true,
+      });
+
+      if (data.success) {
+        setCredits(data.credits);
+        console.log(data.credits);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || error.message);
     }
+  };
 
-    const removeBg = async (image) => {
-        try {
+  const removeBg = async (image) => {
+    try {
+      setImage(image);
+      setResultImage(false);
+      navigate('/result');
 
-            if (!isSignedIn) {
-                return openSignIn()
-            }
-            setImage(image)
-            setResultImage(false)
+      const formData = new FormData();
+      image && formData.append('image', image);
 
-            navigate('/result')
-            const token = await getToken();
-
-            const formData = new FormData();
-            image && formData.append('image', image)
-
-            const { data } = await axios.post(backendUrl + '/api/image/remove-bg', formData, {
-                headers: { token }
-            })
-
-            if (data.success) {
-                setResultImage(data.resultImage)
-                data.creditBalance && setCredits(data.creditBalance)
-            }
-            else {
-                toast.error(data.message)
-                data.creditBalance && setCredits(data.creditBalance)
-                if (data.creditBalance === 0) {
-                    navigate('/buy')
-                }
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error(error.message);
+      const { data } = await axios.post(
+        backendUrl + '/api/image/remove-bg',
+        formData,
+        {
+          withCredentials: true,
         }
-    }
+      );
 
-    const value = {
-        credits, setCredits,
-        loadCreditsData, backendUrl,
-        image, setImage,
-        removeBg,
-        resultImage,setResultImage
+      if (data.success) {
+        setResultImage(data.resultImage);
+        if (data.creditBalance) setCredits(data.creditBalance);
+      } else {
+        toast.error(data.message);
+        if (data.creditBalance) setCredits(data.creditBalance);
+        if (data.creditBalance === 0) {
+          navigate('/buy');
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
     }
-    return (
-        <AppContext.Provider value={value}>
-            {props.children}
-        </AppContext.Provider>
-    )
-}
+  };
 
-export default AppContextProvider
+  const value = {
+    credits,
+    setCredits,
+    loadCreditsData,
+    backendUrl,
+    image,
+    setImage,
+    removeBg,
+    resultImage,
+    setResultImage,
+    user,
+    isLoggedin,
+    setUser,
+    setIsLoggedin,
+  };
+
+  return (
+    <AppContext.Provider value={value}>
+      {props.children}
+    </AppContext.Provider>
+  );
+};
+
+export default AppContextProvider;
