@@ -13,7 +13,7 @@ const app = express();
 
 
 app.use(express.json());
-app.use(cors({ credentials: true, origin: "https://free-bg-removal.vercel.app" }));
+app.use(cors({ credentials: true, origin: "https://free-bg-removal.vercel.app", optionsSuccessStatus: 200 }));
 app.use(cookieParser());
 
 
