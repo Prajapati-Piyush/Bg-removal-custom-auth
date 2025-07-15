@@ -14,7 +14,7 @@ const SignupPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-     const { backendUrl, setUser, setIsLoggedin } = useContext(AppContext);
+    const { backendUrl, setUser, setIsLoggedin } = useContext(AppContext);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -32,19 +32,19 @@ const SignupPage = () => {
 
         try {
             setLoading(true);
-            const res = await axios.post(backendUrl + '/api/user/signup', {
+            const res = await axios.post(backendUrl + '/user/signup', {
                 firstName,
                 lastName,
                 email,
                 password,
-            },{withCredentials:true});
+            }, { withCredentials: true });
 
             if (res.data.success) {
-                localStorage.setItem('token', res.data.token); 
+         
                 setUser(res.data.user);
                 setIsLoggedin(true)
                 alert('Signup successful!');
-                
+
                 navigate('/');
             } else {
                 setError(res.data.message || 'Signup failed');
