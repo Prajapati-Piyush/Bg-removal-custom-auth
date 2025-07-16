@@ -124,130 +124,113 @@ const verifyRazorpay = async (req, res) => {
 }
 
 const login = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.json({ success: false, message: "Email and password are required" });
+  if (!email || !password) {
+    return res.json({ success: false, message: "Email and password are required" });
+  }
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
     }
 
-    try {
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.json({ success: false, message: "User not found" });
-        }
-
-        const isValidPassword = await bcrypt.compare(password, user.password);
-
-        if (!isValidPassword) {
-            return res.json({ success: false, message: "Invalid credentials" });
-        }
-        const token = generateToken(user);
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
-            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
-            path: '/',
-        });
-
-
-        return res.json({
-            success: true,
-            message: "Logged in",
-            token,
-            user: {
-                clerkId: user.clerkId,
-                firstName: user.firstName,
-                photo: user.photo,
-            },
-        });
-
-    } catch (error) {
-        console.error(error);
-        res.json({ success: false, message: error.message });
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.json({ success: false, message: "Invalid credentials" });
     }
+
+    const token = generateToken(user); // jwt sign
+
+    return res.json({
+      success: true,
+      message: "Logged in",
+      token,
+      user: {
+        clerkId: user.clerkId,
+        firstName: user.firstName,
+        photo: user.photo,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
 };
+
 
 const signup = async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
-    if (!firstName || !email || !password) {
-        return res.json({ success: false, message: "Please fill all required fields" });
+  if (!firstName || !email || !password) {
+    return res.json({ success: false, message: "Please fill all required fields" });
+  }
+
+  try {
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.json({ success: false, message: "Email already exists" });
     }
 
-    try {
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.json({ success: false, message: "Email already exists" });
-        }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await userModel.create({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      clerkId: uuidv4(),
+      photo: `https://ui-avatars.com/api/?name=${firstName}+${lastName}`,
+    });
 
-        const user = await userModel.create({
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-            clerkId: uuidv4(),
-            photo: `https://ui-avatars.com/api/?name=${firstName}+${lastName}`,
-        });
+    const token = generateToken(user);
 
-        const token = generateToken(user);
+    res.json({
+      success: true,
+      message: 'Signup successful',
+      token,
+      user: {
+        clerkId: user.clerkId,
+        firstName: user.firstName,
+        photo: user.photo,
+        email: user.email,
+      },
+    });
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // ✅ auto adjusts
-            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // ✅ dev vs prod
-            path: '/',
-        });
-
-
-        res.json({
-            success: true,
-            message: 'Signup successful',
-            token,
-            user: {
-                clerkId: user.clerkId,
-                firstName: user.firstName,
-                photo: user.photo,
-                email: user.email,
-            },
-        });
-
-
-    } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
-    }
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
 };
+
 
 const getLoggedInUser = async (req, res) => {
-    try {
-        console.log(req.user)
-        const token = req.cookies.token;
-        if (!token) {
-            return res.status(401).json({ success: false, message: "Not authenticated" });
-        }
+  try {
+    const { clerkId } = req.user;
 
-        const user = await userModel.findOne({ clerkId: req.user.clerkId });
+    const user = await userModel.findOne({ clerkId });
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-
-        res.json({
-            success: true,
-            user: {
-                firstName: user.firstName,
-                email: user.email,
-                photo: user.photo || null,
-                clerkId: user.clerkId,
-            },
-        });
-    } catch (error) {
-        console.error("Error in /me:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
+
+    res.json({
+      success: true,
+      user: {
+        firstName: user.firstName,
+        email: user.email,
+        photo: user.photo || null,
+        clerkId: user.clerkId,
+      },
+    });
+  } catch (error) {
+    console.error("Error in /me:", error.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
+
 
 
 

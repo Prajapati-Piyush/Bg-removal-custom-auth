@@ -9,9 +9,20 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignUpPage';
+import axios from 'axios'
 
 
 function App() {
+
+  // Add this once, e.g. in App.jsx or here:
+  axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
   return (
     <div className='min-h-screen bg-slate-50'>
       <ToastContainer position='bottom-right' />
