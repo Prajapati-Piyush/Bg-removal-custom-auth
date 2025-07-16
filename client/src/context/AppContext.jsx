@@ -20,7 +20,6 @@ const AppContextProvider = (props) => {
   // 🚀 Load token from localStorage and fetch user info
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-
     if (storedToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       setToken(storedToken);
@@ -28,7 +27,7 @@ const AppContextProvider = (props) => {
     }
   }, [backendUrl]);
 
-  const fetchUser = async (token) => {
+  const fetchUser = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/user/me`);
 
@@ -36,11 +35,22 @@ const AppContextProvider = (props) => {
         setUser(data.user);
         setIsLoggedin(true);
       } else {
-        logout(); // fallback if token is invalid
+        // Optional: mark as not logged in but DON'T logout
+        setUser(null);
+        setIsLoggedin(false);
       }
     } catch (error) {
-      console.log("Fetch user failed:", error.message);
-      logout(); // fallback on error
+      const status = error?.response?.status;
+
+      // 🔐 Only logout if the token is invalid
+      if (status === 401 || status === 403) {
+        logout(); // logout only when token is invalid
+      } else {
+        console.warn('Fetch user failed (non-auth):', error.message);
+        setUser(null);
+        setIsLoggedin(false);
+        // toast.error('Something went wrong while fetching user.');
+      }
     }
   };
 
