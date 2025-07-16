@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { useContext } from 'react'
-import { AppContext } from "../context/AppContext"
-
+import { Link, useNavigate } from 'react-router-dom';
+import { AppContext } from "../context/AppContext";
 
 const SignupPage = () => {
     const [firstName, setFirstName] = useState('');
@@ -14,7 +11,7 @@ const SignupPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { backendUrl, setUser, setIsLoggedin } = useContext(AppContext);
+    const { backendUrl, setUser, setIsLoggedin, handleAuthSuccess } = useContext(AppContext);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -32,19 +29,28 @@ const SignupPage = () => {
 
         try {
             setLoading(true);
-            const res = await axios.post(backendUrl + '/api/user/signup', {
+
+            const res = await axios.post(`${backendUrl}/api/user/signup`, {
                 firstName,
                 lastName,
                 email,
                 password,
-            }, { withCredentials: true });
+            });
 
             if (res.data.success) {
-         
-                setUser(res.data.user);
-                setIsLoggedin(true)
-                alert('Signup successful!');
+                // ✅ Save token to localStorage
+                localStorage.setItem('token', res.data.token);
 
+                // ✅ Optionally set default Axios header for future requests
+                axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+
+
+                // ✅ Update global state
+                setUser(res.data.user);
+                setIsLoggedin(true);
+                 handleAuthSuccess(res.data.token, res.data.user);
+
+                alert('Signup successful!');
                 navigate('/');
             } else {
                 setError(res.data.message || 'Signup failed');

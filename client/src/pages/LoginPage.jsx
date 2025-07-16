@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { useContext } from 'react'
-import { useNavigate } from 'react-router-dom';
-import { AppContext } from "../context/AppContext"
+import { Link, useNavigate } from 'react-router-dom';
+import { AppContext } from "../context/AppContext";
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -11,11 +9,9 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { backendUrl, setUser, setIsLoggedin } = useContext(AppContext);
+    const { backendUrl, setUser, setIsLoggedin, handleAuthSuccess } = useContext(AppContext);
 
-    const validateEmail = (email) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    };
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,15 +27,23 @@ const LoginPage = () => {
 
         try {
             setLoading(true);
-            const res = await axios.post(backendUrl + '/api/user/login', {
+
+            const res = await axios.post(`${backendUrl}/api/user/login`, {
                 email,
                 password,
-            }, { withCredentials: true });
+            });
 
             if (res.data.success) {
                 console.log('Login success:', res.data);
+
+                // ✅ Save token to localStorage
+                localStorage.setItem('token', res.data.token);
+                handleAuthSuccess(res.data.token, res.data.user);
+
+                // ✅ Update global state
                 setUser(res.data.user);
-                setIsLoggedin(true)
+                setIsLoggedin(true);
+
                 alert('Login successful!');
                 navigate('/');
             } else {
@@ -102,7 +106,7 @@ const LoginPage = () => {
 
                 <div className="text-center text-sm text-gray-500 mt-5">
                     Don’t have an account?{' '}
-                    <Link to={'/signup'} className="text-blue-600 hover:underline">
+                    <Link to="/signup" className="text-blue-600 hover:underline">
                         Sign up
                     </Link>
                 </div>
