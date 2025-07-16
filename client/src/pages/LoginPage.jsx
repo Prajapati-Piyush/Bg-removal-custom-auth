@@ -9,7 +9,7 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { backendUrl, setUser, setIsLoggedin, handleAuthSuccess } = useContext(AppContext);
+    const { backendUrl, handleAuthSuccess } = useContext(AppContext);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -17,13 +17,8 @@ const LoginPage = () => {
         e.preventDefault();
         setError('');
 
-        if (!email || !password) {
-            return setError('Please fill in all fields.');
-        }
-
-        if (!validateEmail(email)) {
-            return setError('Invalid email format.');
-        }
+        if (!email || !password) return setError('Please fill in all fields.');
+        if (!validateEmail(email)) return setError('Invalid email format.');
 
         try {
             setLoading(true);
@@ -34,15 +29,14 @@ const LoginPage = () => {
             });
 
             if (res.data.success) {
-                console.log('Login success:', res.data);
+                const { token, user } = res.data;
 
-                // ✅ Save token to localStorage
-                localStorage.setItem('token', res.data.token);
-                handleAuthSuccess(res.data.token, res.data.user);
+                // ✅ Save token and update axios header
+                localStorage.setItem('token', token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-                // ✅ Update global state
-                setUser(res.data.user);
-                setIsLoggedin(true);
+                // ✅ Update context state
+                handleAuthSuccess(token, user);
 
                 alert('Login successful!');
                 navigate('/');
@@ -50,8 +44,7 @@ const LoginPage = () => {
                 setError(res.data.message || 'Login failed');
             }
         } catch (err) {
-            const msg = err.response?.data?.message || 'Login failed';
-            setError(msg);
+            setError(err.response?.data?.message || 'Login failed');
         } finally {
             setLoading(false);
         }
@@ -65,40 +58,29 @@ const LoginPage = () => {
                     <p className="text-sm text-gray-500 mt-1">Login to continue</p>
                 </div>
 
-                {error && (
-                    <div className="text-red-600 text-sm mb-4 text-center">{error}</div>
-                )}
+                {error && <div className="text-red-600 text-sm mb-4 text-center">{error}</div>}
 
                 <form className="space-y-5" onSubmit={handleSubmit}>
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Email</label>
-                        <input
-                            type="email"
-                            placeholder="you@example.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Password</label>
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-2 bg-blue-600 text-white rounded-lg font-medium transition hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg"
                     >
                         {loading ? 'Logging in...' : 'Continue'}
                     </button>

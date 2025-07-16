@@ -11,42 +11,44 @@ const AppContextProvider = (props) => {
   const [image, setImage] = useState(false);
   const [resultImage, setResultImage] = useState(false);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoggedin, setIsLoggedin] = useState(false);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://bg-removal-backend-beta.vercel.app";
   const navigate = useNavigate();
 
-  // 🚀 Load token from localStorage and set axios headers
+  // 🚀 Load token from localStorage and fetch user info
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const storedToken = localStorage.getItem('token');
+
+    if (storedToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      setToken(storedToken);
+      fetchUser(storedToken);
     }
+  }, [backendUrl]);
 
-    const fetchUser = async () => {
-      try {
-        const { data } = await axios.get(backendUrl + '/api/user/me');
-        if (data.success) {
-          setUser(data.user);
-          setIsLoggedin(true);
-        } else {
-          setUser(null);
-          setIsLoggedin(false);
-        }
-      } catch (error) {
-        console.log("Fetch user failed:", error.message);
-        setUser(null);
-        setIsLoggedin(false);
+  const fetchUser = async (token) => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/user/me`);
+
+      if (data.success) {
+        setUser(data.user);
+        setIsLoggedin(true);
+      } else {
+        logout(); // fallback if token is invalid
       }
-    };
+    } catch (error) {
+      console.log("Fetch user failed:", error.message);
+      logout(); // fallback on error
+    }
+  };
 
-    fetchUser();
-  }, []);
-
-  // 🔑 Login or Signup Success Handler
+  // 🔑 Called after login/signup
   const handleAuthSuccess = (token, userData) => {
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setToken(token);
     setUser(userData);
     setIsLoggedin(true);
   };
@@ -54,6 +56,7 @@ const AppContextProvider = (props) => {
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
+    setToken(null);
     setUser(null);
     setIsLoggedin(false);
     navigate('/login');
@@ -61,7 +64,7 @@ const AppContextProvider = (props) => {
 
   const loadCreditsData = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/api/user/credits');
+      const { data } = await axios.get(`${backendUrl}/api/user/credits`);
       if (data.success) {
         setCredits(data.credits);
       }
@@ -78,12 +81,9 @@ const AppContextProvider = (props) => {
       navigate('/result');
 
       const formData = new FormData();
-      if (image) formData.append('image', image);
+      formData.append('image', image);
 
-      const { data } = await axios.post(
-        backendUrl + '/api/image/remove-bg',
-        formData
-      );
+      const { data } = await axios.post(`${backendUrl}/api/image/remove-bg`, formData);
 
       if (data.success) {
         setResultImage(data.resultImage);
@@ -101,6 +101,7 @@ const AppContextProvider = (props) => {
 
   const value = {
     credits,
+    token,
     setCredits,
     loadCreditsData,
     backendUrl,
@@ -112,9 +113,10 @@ const AppContextProvider = (props) => {
     user,
     isLoggedin,
     setUser,
+    setToken,
     setIsLoggedin,
-    handleAuthSuccess, // 👈 call this after login/signup
-    logout,            // 👈 use this to log out user
+    handleAuthSuccess,
+    logout,
   };
 
   return (

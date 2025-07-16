@@ -9,8 +9,7 @@ const Navbar = () => {
     user,
     credits,
     loadCreditsData,
-    setUser,
-    setIsLoggedin,
+    logout, // ✅ Use context logout for cleaner flow
   } = useContext(AppContext);
 
   const navigate = useNavigate();
@@ -22,10 +21,7 @@ const Navbar = () => {
   }, [isLoggedin]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // ❌ Remove token
-    setUser(null);
-    setIsLoggedin(false);
-    navigate('/login'); // 🚪 Redirect to login
+    logout(); // ✅ use global logout
   };
 
   return (
@@ -43,7 +39,9 @@ const Navbar = () => {
             className='flex items-center gap-2 bg-blue-100 px-4 sm:px-7 py-1.5 rounded-full hover:scale-105 transition-all duration-700 cursor-pointer'
           >
             <img className='w-5' src={assets.credit_icon} alt="" />
-            <p className='text-xs sm:text-sm font-medium text-gray-600'>Credits: {credits}</p>
+            <p className='text-xs sm:text-sm font-medium text-gray-600'>
+              Credits: {credits}
+            </p>
           </button>
 
           <p className='text-gray-600 max-sm:hidden'>Hi, {user?.firstName}</p>
@@ -56,7 +54,6 @@ const Navbar = () => {
             />
           )}
 
-          {/* ✅ Logout Button */}
           <button
             onClick={handleLogout}
             className='bg-red-500 text-white text-xs sm:text-sm px-3 sm:px-4 py-1.5 rounded-full hover:bg-red-600 transition-all'

@@ -11,7 +11,7 @@ const SignupPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { backendUrl, setUser, setIsLoggedin, handleAuthSuccess } = useContext(AppContext);
+    const { backendUrl, handleAuthSuccess } = useContext(AppContext);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -19,13 +19,8 @@ const SignupPage = () => {
         e.preventDefault();
         setError('');
 
-        if (!firstName || !email || !password) {
-            return setError('First name, email, and password are required.');
-        }
-
-        if (!validateEmail(email)) {
-            return setError('Invalid email format.');
-        }
+        if (!firstName || !email || !password) return setError('All fields are required.');
+        if (!validateEmail(email)) return setError('Invalid email format.');
 
         try {
             setLoading(true);
@@ -38,17 +33,14 @@ const SignupPage = () => {
             });
 
             if (res.data.success) {
-                // ✅ Save token to localStorage
-                localStorage.setItem('token', res.data.token);
+                const { token, user } = res.data;
 
-                // ✅ Optionally set default Axios header for future requests
-                axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+                // ✅ Save token and set axios default header
+                localStorage.setItem('token', token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-
-                // ✅ Update global state
-                setUser(res.data.user);
-                setIsLoggedin(true);
-                 handleAuthSuccess(res.data.token, res.data.user);
+                // ✅ Update context state
+                handleAuthSuccess(token, user);
 
                 alert('Signup successful!');
                 navigate('/');
@@ -56,8 +48,7 @@ const SignupPage = () => {
                 setError(res.data.message || 'Signup failed');
             }
         } catch (err) {
-            const msg = err.response?.data?.message || 'Signup failed. Try again.';
-            setError(msg);
+            setError(err.response?.data?.message || 'Signup failed');
         } finally {
             setLoading(false);
         }
@@ -71,63 +62,44 @@ const SignupPage = () => {
                     <p className="text-sm text-gray-500 mt-1">Signup to get started</p>
                 </div>
 
-                {error && (
-                    <div className="text-red-600 text-sm mb-4 text-center">{error}</div>
-                )}
+                {error && <div className="text-red-600 text-sm mb-4 text-center">{error}</div>}
 
                 <form className="space-y-5" onSubmit={handleSubmit}>
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">First Name</label>
-                        <input
-                            type="text"
-                            placeholder="First Name"
-                            required
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Last Name</label>
-                        <input
-                            type="text"
-                            placeholder="Last Name"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Email</label>
-                        <input
-                            type="email"
-                            placeholder="you@example.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Password</label>
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
+                    <input
+                        type="text"
+                        placeholder="First Name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 border rounded-lg"
+                    />
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-2 bg-blue-600 text-white rounded-lg font-medium transition hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg"
                     >
                         {loading ? 'Signing up...' : 'Create Account'}
                     </button>
@@ -135,7 +107,7 @@ const SignupPage = () => {
 
                 <div className="text-center text-sm text-gray-500 mt-5">
                     Already have an account?{' '}
-                    <Link to={'/login'} className="text-blue-600 hover:underline">
+                    <Link to="/login" className="text-blue-600 hover:underline">
                         Log in
                     </Link>
                 </div>
