@@ -2,10 +2,29 @@ import React from 'react'
 import { assets } from '../assets/assets'
 import { useContext } from 'react'
 import { AppContext } from '../context/AppContext'
+import { toast } from 'react-toastify'
 
 const Upload = () => {
 
     const { removeBg } = useContext(AppContext)
+
+    const handleFileChange =(e)=>{
+        const file =e.target.files[0]
+
+        if(!file) return 
+
+        const max_size = 5 *1024 * 1024 // 5MB
+
+        if(file.size > max_size){
+            toast.error("Image Size must be less than 5MB!")
+            return
+        }
+
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2)
+        toast.success(`Uploading ${sizeInMB} MB image 🚀`)
+
+        removeBg(file)
+    }
     return (
         <div className='pb-16'>
             {/* title */}
@@ -13,7 +32,7 @@ const Upload = () => {
 
             {/* Upload btn */}
             <div className='text-center mb-24'>
-                <input onChange={(e) => removeBg(e.target.files[0])} type="file" accept='image/*' id="upload2" hidden />
+                <input onChange={handleFileChange} type="file" accept='image/*' id="upload2" hidden />
 
                 <label className='inline-flex gap-3 px-8 py-3.5 rounded-full cursor-pointer bg-gradient-to-r from-violet-600 to-fuchsia-500 m-auto hover:scale-105 transition-all duration-700 ' htmlFor="upload2">
                     <img width={20} src={assets.upload_btn_icon} alt="" />

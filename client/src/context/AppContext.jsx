@@ -23,9 +23,15 @@ const AppContextProvider = (props) => {
     if (storedToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       setToken(storedToken);
-      fetchUser(storedToken);
+
+      // ✅ Ensure token is set before calling API
+      setTimeout(() => {
+        fetchUser();
+      }, 0);
     }
-  }, [backendUrl]);
+  }, []);
+
+
 
   const fetchUser = async () => {
     try {
@@ -86,6 +92,13 @@ const AppContextProvider = (props) => {
 
   const removeBg = async (image) => {
     try {
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+      if (image.size > MAX_SIZE) {
+        toast.error("Image size must be less than 5MB ❌");
+        return;
+      }
+
       setImage(image);
       setResultImage(false);
       navigate('/result');

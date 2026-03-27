@@ -17,6 +17,7 @@ userRouter.post('/login', login);
 userRouter.get('/me', authUser, getLoggedInUser);
 
 
+
 userRouter.get('/credits', authUser, userCredits);
 userRouter.post('/pay-razor', authUser, paymentRazorpay);
 userRouter.post('/verify-razor', verifyRazorpay);

@@ -14,7 +14,7 @@ const removeBgImage = async (req, res) => {
         if (user.creditBalance === 0) {
             return res.json({ success: false, message: "No credit balance", creditBalance: 0 });
         }
-
+        console.log(req.file);
         const imagePath = req.file.path;
         const imageFile = fs.createReadStream(imagePath);
 
